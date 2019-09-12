@@ -1,0 +1,61 @@
+version: '3'
+services:
+  thumbor:
+    build:
+      context: .
+    image: fdintino/thumbor
+    environment:
+      # VIRTUAL_HOST is picked up by nginx-proxy. Here it's set for localhost
+      # but you usually need to point it to your domain, e.g. thumbor.example.com
+      - VIRTUAL_HOST=thumbor.example.com
+      # THUMBOR_NUM_PROCESSES control how many processes run inside the container
+      # Normally this is set in connection with the number of CPU cores
+      # Note however that you can also use the docker-compose scale option to dynamically
+      # scale your thumbor instances
+      - THUMBOR_NUM_PROCESSES=4
+      # this would allow CORS from any origin (you can restrict to specific origins if you want)
+      - CORS_ALLOW_ORIGIN=*
+      # returns a webp image if browser Accept headers match
+      - AUTO_WEBP=False
+      # Basic thumbor setup to cache both original images and results (after manipulation)
+      # nginx-proxy would detect if there's a cached version and serve it for you automatically
+      # (this greatly speeds up and saves on CPU)
+      - RESULT_STORAGE=thumbor.result_storages.file_storage
+      - RESULT_STORAGE_STORES_UNSAFE=True
+      - STORAGE=thumbor.storages.file_storage
+      - LOADER=thumbor.loaders.file_loader_http_fallback
+      - OPTIMIZERS=['thumbor_plugins.optimizers.jp2','thumbor_plugins.optimizers.mozjpeg','thumbor_plugins.optimizers.pngquant']
+      - SECURITY_KEY=yourkeyhere
+      - JP2_QUALITY=85
+      - MOZJPEG_QUALITY=85
+    volumes:
+      # mounting a /data folder to store cached images
+      - ./data:/data
+    restart: always
+    networks:
+      - app
+  nginx-proxy:
+    image: minimalcompact/thumbor-nginx-proxy
+    environment:
+      # setting the DEFAULT_HOST to the same as the VIRTUAL_HOST above.
+      # Makes sure it works irrespective of the host name
+      # Normally this won't be necessary, but it helps for testing.
+      - DEFAULT_HOST=localhost
+    volumes:
+      # this is essential for nginx-proxy to detect docker containers, scaling etc
+      # see https://github.com/jwilder/nginx-proxy
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      # mapping the same data folder, to allow nginx-proxy to fetch images from cache
+      - ./data:/data
+    ports:
+      - "82:80"
+      - "444:443"
+    restart: always
+    networks:
+      - app
+volumes:
+  data:
+    driver: local
+networks:
+  app:
+    driver: bridge
