@@ -111,9 +111,7 @@ ADD conf/circus.ini.tpl /etc/
 RUN mkdir  /etc/circus.d /etc/setup.d
 ADD conf/thumbor-circus.ini.tpl /etc/circus.d/
 
-RUN \
-    ln /usr/lib/python2.7/dist-packages/cv2.x86_64-linux-gnu.so /usr/local/lib/python2.7/cv2.so && \
-    ln /usr/lib/python2.7/dist-packages/cv.py /usr/local/lib/python2.7/cv.py
+RUN ln /usr/lib/python2.7/dist-packages/cv2.x86_64-linux-gnu.so /usr/local/lib/python2.7/cv2.so
 
 ARG SIMD_LEVEL
 # workaround for https://github.com/python-pillow/Pillow/issues/3441
