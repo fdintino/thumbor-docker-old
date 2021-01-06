@@ -19,5 +19,5 @@ tc-redis==1.0.1
 thumbor-cloud-storage==3.0.0
 pgmagick==0.7.4
 graphicsmagick-engine==0.1.1
-cairosvg==1.0.22
+cairosvg==2.5.1
 -e git+https://github.com/fdintino/thumbor-plugins.git@v0.2.2+fd.1.1#egg=thumbor-plugins
